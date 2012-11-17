@@ -120,6 +120,18 @@ Protected Module MessagePack
 		  
 		  bs.Position = bs.Position - 1
 		  
+		  ' Nil
+		  If dataType = UInt8(Type.NULL) Then
+		    Return Nil
+		  End
+		  
+		  ' Boolean
+		  If dataType = UInt8(Type.BOOL_TRUE) Then
+		    Return True
+		  Elseif dataType = UInt8(Type.BOOL_FALSE) Then
+		    Return False
+		  End
+		  
 		  ' strings
 		  If (dataType = UInt8(Type.RAW16)) or (dataType = UInt8(Type.RAW32)) then
 		    Return decode_string(bs)
@@ -299,24 +311,27 @@ Protected Module MessagePack
 
 	#tag Method, Flags = &h0
 		Sub encode_item(ByRef buff As BinaryStream, ByRef d As Dictionary)
-		  '
-		  'if dict_atom = Nil Then
-		  'dict_atom = New MessagePack.Symbol("dict")
-		  'End If
-		  '
-		  'Dim t As New MessagePack.Tuple
-		  '
-		  't.Append( bert_atom )
-		  't.Append(dict_atom)
-		  '
-		  'Dim parts() As Variant
-		  '
-		  'For Each k As Variant In d.Keys
-		  'parts.Append( New MessagePack.Tuple(k, d.Value(k)) )
-		  'Next
-		  '
-		  't.Append(parts)
-		  'encode_item(buff, t)
+		  
+		  if d.Count <= 15 Then
+		    ' 1001XXXX (XX = size)
+		    buff.WriteByte( BitOr(&b10000000, BitwiseAnd(&b00001111, d.Count)) )
+		    
+		  ElseIf d.Count <= MAX_UIN16 Then
+		    buff.WriteUInt8( UInt8(Type.MAP16) )
+		    buff.WriteUInt16( d.Count )
+		    
+		  ElseIf d.Count <= MAX_UINT32 Then
+		    buff.WriteByte( UInt8(Type.MAP32) )
+		    buff.WriteUInt32( d.Count )
+		    
+		  Else
+		    invalid_type()
+		  End
+		  
+		  For Each key As Variant In d.Keys
+		    encode_item(buff, key)
+		    encode_item(buff, d.Value(key))
+		  Next
 		  
 		End Sub
 	#tag EndMethod
@@ -503,7 +518,12 @@ Protected Module MessagePack
 		    encode_integer(buff, val)
 		    
 		  ElseIf val.Type = Variant.TypeObject Then
-		    encode_item(buff, val.ObjectValue)
+		    if val IsA Dictionary Then
+		      Dim d As Dictionary = val
+		      encode_item(buff, d)
+		    Else
+		      encode_item(buff, val.ObjectValue)
+		    End
 		    
 		  ElseIf BitwiseAnd(val.Type, Variant.TypeArray) = Variant.TypeArray Then
 		    Dim v_arr() As Variant = val
@@ -513,13 +533,16 @@ Protected Module MessagePack
 		      ' 1001XXXX (XX = size)
 		      buff.WriteByte( BitOr(&b10010000, BitwiseAnd(&b00001111, size)) )
 		      
-		    ElseIf size <= Pow(2, 16) - 1 Then
+		    ElseIf size <= MAX_UIN16 Then
 		      buff.WriteUInt8( UInt8(Type.ARRAY16) )
 		      buff.WriteUInt16( size )
 		      
-		    Else
+		    ElseIf size <= MAX_UINT32 Then
 		      buff.WriteByte( UInt8(Type.ARRAY32) )
 		      buff.WriteUInt32( size )
+		      
+		    Else
+		      invalid_type()
 		    End
 		    
 		    For Each v As Variant In v_arr
@@ -540,6 +563,13 @@ Protected Module MessagePack
 		  
 		End Sub
 	#tag EndMethod
+
+
+	#tag Constant, Name = MAX_UIN16, Type = Double, Dynamic = False, Default = \"65535", Scope = Private
+	#tag EndConstant
+
+	#tag Constant, Name = MAX_UINT32, Type = Double, Dynamic = False, Default = \"4294967295", Scope = Private
+	#tag EndConstant
 
 
 	#tag Enum, Name = Type, Type = UInt8, Flags = &h21
