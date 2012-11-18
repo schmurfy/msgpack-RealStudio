@@ -20,19 +20,25 @@ Inherits Application
 		    client.Port = 3002
 		    client.Connect()
 		    
-		    Dim d As New Dictionary
+		    client.register_service("something", new TestService)
 		    
-		    d.Value("name") = "TOTO"
+		    'Dim d As New Dictionary
+		    'd.Value("name") = "TOTO"
 		    
 		    'client.send_request("test_svc", "test_method", 5)
 		    'client.send_request("test_svc", "echo", d)
 		    
-		    Dim th As New ThTest
+		    Dim th As New ThTest(false)
 		    th.Run()
 		    
 		  #endif
 		End Sub
 	#tag EndEvent
+
+
+	#tag Property, Flags = &h0
+		client As TestClient
+	#tag EndProperty
 
 
 	#tag Constant, Name = TEST_MODE, Type = Boolean, Dynamic = False, Default = \"true", Scope = Private
