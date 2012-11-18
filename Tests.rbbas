@@ -273,7 +273,7 @@ Protected Class Tests
 
 	#tag Method, Flags = &h0
 		Sub test_decode_array()
-		  Dim mb As New MemoryBlock(1)
+		  Dim mb As New MemoryBlock(23)
 		  Dim bs As New BinaryStream(mb)
 		  
 		  Dim arr(), arr2() As Variant
@@ -285,6 +285,7 @@ Protected Class Tests
 		  bs.Position = 0
 		  arr2 = MessagePack.decode_item(bs)
 		  
+		  assert(bs.Position = 1 + 4 + 4 + 14)
 		  
 		  For n As Integer = 0 To arr.Ubound
 		    assert( arr(n) = arr2(n) )
@@ -311,6 +312,7 @@ Protected Class Tests
 		  MessagePack.encode(bs, arr)
 		  bs.Position = 0
 		  arr2 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 3 + size)
 		  
 		  For n As Integer = 0 To arr.Ubound
 		    assert( arr2(n) = arr(n) )
@@ -338,6 +340,7 @@ Protected Class Tests
 		  MessagePack.encode(bs, arr)
 		  bs.Position = 0
 		  arr2 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 5 + size)
 		  
 		  For n As Integer = 0 To arr.Ubound
 		    assert( arr(n) = arr2(n) )
@@ -356,6 +359,8 @@ Protected Class Tests
 		  
 		  bs.Position = 0
 		  Dim b2 As Boolean = MessagePack.decode_item(bs)
+		  assert(bs.Position = 1)
+		  
 		  assert(b2 = False, "", "Decode False")
 		  
 		  
@@ -371,8 +376,9 @@ Protected Class Tests
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As Int8 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 1)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -381,15 +387,16 @@ Protected Class Tests
 
 	#tag Method, Flags = &h0
 		Sub test_decode_int16()
-		  Dim mb As New MemoryBlock(1)
+		  Dim mb As New MemoryBlock(3)
 		  Dim bs As New BinaryStream(mb)
 		  
 		  Dim n As Int16 = - Pow(2, 15) + 1
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As Int16 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 3)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -398,15 +405,16 @@ Protected Class Tests
 
 	#tag Method, Flags = &h0
 		Sub test_decode_int32()
-		  Dim mb As New MemoryBlock(1)
+		  Dim mb As New MemoryBlock(5)
 		  Dim bs As New BinaryStream(mb)
 		  
 		  Dim n As Int32 = - Pow(2, 31) + 1
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As Int32 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 5)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -415,17 +423,92 @@ Protected Class Tests
 
 	#tag Method, Flags = &h0
 		Sub test_decode_int8()
-		  Dim mb As New MemoryBlock(1)
+		  Dim mb As New MemoryBlock(2)
 		  Dim bs As New BinaryStream(mb)
 		  
 		  Dim n As Int8 = -127
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As Int8 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 2)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub test_decode_map()
+		  Dim mb As New MemoryBlock(23)
+		  Dim bs As New BinaryStream(mb)
+		  
+		  Dim d As New Dictionary
+		  Dim d2 As New Dictionary
+		  d.Value("one") = 1
+		  d.Value("two") = 2
+		  
+		  MessagePack.encode(bs, d)
+		  bs.Position = 0
+		  d2 = MessagePack.decode_item(bs)
+		  
+		  assert(bs.Position = 1 + (4 + 1) * d.Count )
+		  
+		  For Each k As String In d.Keys
+		    assert( d.Value(k) = d2.Value(k) )
+		  Next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub test_decode_map16()
+		  Dim mb As New MemoryBlock(23)
+		  Dim bs As New BinaryStream(mb)
+		  
+		  Dim d As New Dictionary
+		  Dim d2 As New Dictionary
+		  Dim size As UInt16 = Pow(2, 16) - 1
+		  For n As UInt16 = 0 To size - 1
+		    d.Value(n) = Nil
+		  Next
+		  
+		  MessagePack.encode(bs, d)
+		  bs.Position = 0
+		  d2 = MessagePack.decode_item(bs)
+		  ' computing this one is  alittle tricky
+		  assert(bs.Position <> 0 )
+		  
+		  For Each k As Variant In d.Keys
+		    assert( d.Value(k) = d2.Value(k) )
+		  Next
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub test_decode_map32()
+		  Dim mb As New MemoryBlock(23)
+		  Dim bs As New BinaryStream(mb)
+		  
+		  Dim d As New Dictionary
+		  Dim d2 As New Dictionary
+		  Dim size As UInt32 = Pow(2, 16)
+		  For n As UInt32 = 0 To size - 1
+		    d.Value(n) = Nil
+		  Next
+		  
+		  MessagePack.encode(bs, d)
+		  bs.Position = 0
+		  d2 = MessagePack.decode_item(bs)
+		  ' computing this one is  alittle tricky
+		  assert(bs.Position <> 0 )
+		  
+		  
+		  For Each k As Variant In d.Keys
+		    assert( d.Value(k) = d2.Value(k) )
+		  Next
 		  
 		End Sub
 	#tag EndMethod
@@ -440,6 +523,8 @@ Protected Class Tests
 		  
 		  bs.Position = 0
 		  Dim n2 As Variant = MessagePack.decode_item(bs)
+		  assert(bs.Position = 1)
+		  
 		  assert(n2 = Nil, "", "Decode Nil")
 		  
 		  
@@ -450,14 +535,19 @@ Protected Class Tests
 		Sub test_decode_string()
 		  Dim mb As New MemoryBlock(10)
 		  Dim bs As New BinaryStream(mb)
+		  Dim str As String = "tôto $£"
 		  
-		  Dim s As String  = "a string with many characters and other things like ; , / + $€"
-		  MessagePack.encode(bs, s)
+		  For i As Integer = 0 To 31 - 10
+		    str = str + "z"
+		  Next
+		  
+		  MessagePack.encode(bs, str)
 		  
 		  bs.Position = 0
-		  
 		  Dim s2 As String = MessagePack.decode_item(bs)
-		  assert(s2 = s, "", "Decode string")
+		  assert(bs.Position = 31 + 1)
+		  
+		  assert(s2 = str, "", "Decode string")
 		  
 		  
 		End Sub
@@ -473,6 +563,8 @@ Protected Class Tests
 		  
 		  bs.Position = 0
 		  Dim b2 As Boolean = MessagePack.decode_item(bs)
+		  assert(bs.Position = 1)
+		  
 		  assert(b2 = True, "", "Decode True")
 		  
 		  
@@ -484,13 +576,13 @@ Protected Class Tests
 		  Dim mb As New MemoryBlock(1)
 		  Dim bs As New BinaryStream(mb)
 		  
-		  
 		  Dim n As UInt8 = 127
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As UInt8 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 1)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -506,8 +598,9 @@ Protected Class Tests
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As UInt16 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 3)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -523,8 +616,9 @@ Protected Class Tests
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As UInt32 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 5)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -541,8 +635,9 @@ Protected Class Tests
 		  MessagePack.encode(bs, n)
 		  
 		  bs.Position = 0
-		  
 		  Dim n2 As UInt8 = MessagePack.decode_item(bs)
+		  assert(bs.Position = 2)
+		  
 		  assert(n = n2, "", "Decode int")
 		  
 		  
@@ -1030,9 +1125,6 @@ Protected Class Tests
 		
 		  pElapsed = (Microseconds() - pStarted) / 1000
 		  pElapsed = 3
-		    
-		
-		
 	#tag EndNote
 
 
