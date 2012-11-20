@@ -21,7 +21,7 @@ Inherits TCPSocket
 
 
 	#tag Method, Flags = &h0
-		Function blocking_request(th as ThTest, service_name As String, method_name As String, ParamArray args As Variant) As Variant
+		Function blocking_request(th as MPThread, service_name As String, method_name As String, ParamArray args As Variant) As Variant
 		  Dim req_id As Integer = th.ThreadID
 		  
 		  _send_request(req_id, service_name, method_name, args)
@@ -74,7 +74,7 @@ Inherits TCPSocket
 		    If cmd(0) = "reply"  Then
 		      Dim request_id As Integer = cmd(1)
 		      If SleepingThreads.HasKey( request_id ) Then
-		        Dim th As ThTest = SleepingThreads.Value(request_id)
+		        Dim th As MessagePack.MPThread = SleepingThreads.Value(request_id)
 		        th.return_values = cmd(2)
 		        th.Resume
 		        
