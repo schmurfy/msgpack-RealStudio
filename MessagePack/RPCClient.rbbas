@@ -30,7 +30,7 @@ Inherits TCPSocket
 		  
 		  th.Suspend()
 		  
-		  Return th.return_values
+		  Return th.return_value
 		End Function
 	#tag EndMethod
 
@@ -75,7 +75,7 @@ Inherits TCPSocket
 		      Dim request_id As Integer = cmd(1)
 		      If SleepingThreads.HasKey( request_id ) Then
 		        Dim th As MessagePack.MPThread = SleepingThreads.Value(request_id)
-		        th.return_values = cmd(2)
+		        th.return_value = cmd(2)
 		        th.Resume
 		        
 		      ElseIf pCallbacks.HasKey(request_id) Then

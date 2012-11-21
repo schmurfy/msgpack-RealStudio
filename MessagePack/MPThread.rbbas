@@ -2,7 +2,7 @@
 Protected Class MPThread
 Inherits Thread
 	#tag Property, Flags = &h0
-		return_values() As Variant
+		return_value As Variant
 	#tag EndProperty
 
 
