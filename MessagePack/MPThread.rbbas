@@ -2,6 +2,10 @@
 Protected Class MPThread
 Inherits Thread
 	#tag Property, Flags = &h0
+		error As RuntimeException = Nil
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		return_value As Variant
 	#tag EndProperty
 

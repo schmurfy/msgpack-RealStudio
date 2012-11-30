@@ -24,13 +24,21 @@ Inherits TCPSocket
 		Function blocking_request(th as MPThread, service_name As String, method_name As String, ParamArray args As Variant) As Variant
 		  Dim req_id As Integer = th.ThreadID
 		  
+		  th.error = Nil
+		  th.return_value = Nil
+		  
 		  _send_request(req_id, service_name, method_name, args)
 		  
 		  SleepingThreads.Value( req_id ) = th
 		  
 		  th.Suspend()
 		  
-		  Return th.return_value
+		  If th.error <> Nil Then
+		    Raise th.error
+		  Else
+		    Return th.return_value
+		  End
+		  
 		End Function
 	#tag EndMethod
 
@@ -71,16 +79,29 @@ Inherits TCPSocket
 		    Dim cmd() As Variant
 		    
 		    cmd = MessagePack.decode(data)
-		    If cmd(0) = "reply"  Then
+		    If (cmd(0) = "reply") or (cmd(0) = "error")  Then
+		      
 		      Dim request_id As Integer = cmd(1)
 		      If SleepingThreads.HasKey( request_id ) Then
 		        Dim th As MessagePack.MPThread = SleepingThreads.Value(request_id)
-		        th.return_value = cmd(2)
+		        If cmd(0) = "error" Then
+		          Dim err As new RuntimeException
+		          err.Message = cmd(2)
+		          th.error = err
+		        Else
+		          th.return_value = cmd(2)
+		        End
 		        th.Resume
 		        
 		      ElseIf pCallbacks.HasKey(request_id) Then
 		        Dim cb As ReplyReceived = pCallbacks.Value(request_id)
-		        cb.Invoke(request_id, cmd(2))
+		        If cmd(0) = "error" Then
+		          Dim err As new RuntimeException
+		          err.Message = cmd(2)
+		          cb.Invoke(request_id, err)
+		        Else
+		          cb.Invoke(request_id, cmd(2))
+		        End
 		        
 		      Else
 		        RaiseEvent ReplyReceived( cmd(2) )
@@ -113,7 +134,7 @@ Inherits TCPSocket
 	#tag EndMethod
 
 	#tag DelegateDeclaration, Flags = &h21
-		Private Delegate Sub ReplyReceived(req_id As Integer, ret() As Variant)
+		Private Delegate Sub ReplyReceived(req_id As Integer, ret As Variant)
 	#tag EndDelegateDeclaration
 
 	#tag Method, Flags = &h0
