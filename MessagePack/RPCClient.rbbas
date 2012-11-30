@@ -29,7 +29,7 @@ Inherits TCPSocket
 		  
 		  _send_request(req_id, service_name, method_name, args)
 		  
-		  SleepingThreads.Value( req_id ) = th
+		  pSleepingThreads.Value( req_id ) = th
 		  
 		  th.Suspend()
 		  
@@ -51,7 +51,7 @@ Inherits TCPSocket
 		  // Constructor() -- From SocketCore
 		  Super.Constructor
 		  
-		  SleepingThreads = new Dictionary
+		  pSleepingThreads = new Dictionary
 		  pCallbacks = new Dictionary
 		  pServices = new Dictionary
 		  
@@ -244,7 +244,7 @@ Inherits TCPSocket
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private SleepingThreads As Dictionary
+		Private pSleepingThreads As Dictionary
 	#tag EndProperty
 
 
