@@ -19,6 +19,31 @@ Inherits TCPSocket
 		End Sub
 	#tag EndEvent
 
+	#tag Event
+		Sub Error()
+		  Dim req_id As Integer
+		  
+		  'If LastErrorCode = LostConnection Then
+		  Dim err As New Error("timeout")
+		  
+		  ' start by timing out every pending request
+		  For Each req_id  In pSleepingThreads.Keys
+		    response_received(req_id, "error", err)
+		  Next
+		  
+		  For Each req_id In pCallbacks.Keys
+		    response_received(req_id, "error", err)
+		  Next
+		  
+		  pRetryTimer = New RetryTimer(10000, AddressOf Connect, Timer.ModeSingle)
+		  'Else
+		  'Dim n As Integer = 42
+		  'End
+		  
+		  
+		End Sub
+	#tag EndEvent
+
 
 	#tag Method, Flags = &h0
 		Function blocking_request(th as MPThread, service_name As String, method_name As String, ParamArray args As Variant) As Variant
@@ -82,36 +107,15 @@ Inherits TCPSocket
 		    If (cmd(0) = "reply") or (cmd(0) = "error")  Then
 		      
 		      Dim request_id As Integer = cmd(1)
-		      If SleepingThreads.HasKey( request_id ) Then
-		        Dim th As MessagePack.MPThread = SleepingThreads.Value(request_id)
-		        If cmd(0) = "error" Then
-		          Dim err As new RuntimeException
-		          err.Message = cmd(2)
-		          th.error = err
-		        Else
-		          th.return_value = cmd(2)
-		        End
-		        th.Resume
-		        
-		      ElseIf pCallbacks.HasKey(request_id) Then
-		        Dim cb As ReplyReceived = pCallbacks.Value(request_id)
-		        If cmd(0) = "error" Then
-		          Dim err As new RuntimeException
-		          err.Message = cmd(2)
-		          cb.Invoke(request_id, err)
-		        Else
-		          cb.Invoke(request_id, cmd(2))
-		        End
-		        
-		      Else
-		        RaiseEvent ReplyReceived( cmd(2) )
-		      End If
+		      response_received(request_id, cmd(0), cmd(2))
 		      
 		      Return True
 		      
 		    ElseIf cmd(0) = "call" Then
 		      Dim request_id As Integer = cmd(1)
 		      Dim ret As Variant = run_service_method(cmd(2), cmd(3), cmd(4))
+		      Return True
+		      
 		    End If
 		  End If
 		  
@@ -134,8 +138,33 @@ Inherits TCPSocket
 	#tag EndMethod
 
 	#tag DelegateDeclaration, Flags = &h21
-		Private Delegate Sub ReplyReceived(req_id As Integer, ret As Variant)
+		Private Delegate Sub ReplyReceived(req_id As Integer, ret As Variant, error As MessagePack.Error = Nil)
 	#tag EndDelegateDeclaration
+
+	#tag Method, Flags = &h21
+		Private Sub response_received(request_id As Integer, type As String, value As Variant)
+		  If pSleepingThreads.HasKey( request_id ) Then
+		    Dim th As MessagePack.MPThread = pSleepingThreads.Value(request_id)
+		    If type = "error" Then
+		      Dim err As new Error(value)
+		      th.error = err
+		    Else
+		      th.return_value = value
+		    End
+		    th.Resume
+		    
+		  ElseIf pCallbacks.HasKey(request_id) Then
+		    Dim cb As ReplyReceived = pCallbacks.Value(request_id)
+		    If type = "error" Then
+		      cb.Invoke(request_id, Nil, value)
+		    Else
+		      cb.Invoke(request_id, value, Nil)
+		    End
+		    
+		  End
+		  
+		End Sub
+	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function run_service_method(module_name As String, method_name As String, args() As Variant) As Variant
@@ -172,24 +201,28 @@ Inherits TCPSocket
 
 	#tag Method, Flags = &h0
 		Sub send_packet(cmd() As Variant)
-		  
-		  Dim mb As New MemoryBlock(100)
-		  Dim bs As New BinaryStream(mb)
-		  
-		  bs.LittleEndian = False
-		  mb.LittleEndian = False
-		  
-		  ' keep space for the header
-		  bs.Position = 4
-		  
-		  MessagePack.encode(bs, cmd)
-		  
-		  Dim len As Integer = Min( bs.Position, bs.Length )
-		  
-		  ' now fill the header
-		  mb.UInt32Value(0) = len - 4
-		  
-		  self.Write( mb.StringValue(0, len) )
+		  If IsConnected Then
+		    Dim mb As New MemoryBlock(100)
+		    Dim bs As New BinaryStream(mb)
+		    
+		    bs.LittleEndian = False
+		    mb.LittleEndian = False
+		    
+		    ' keep space for the header
+		    bs.Position = 4
+		    
+		    MessagePack.encode(bs, cmd)
+		    
+		    Dim len As Integer = Min( bs.Position, bs.Length )
+		    
+		    ' now fill the header
+		    mb.UInt32Value(0) = len - 4
+		    
+		    self.Write( mb.StringValue(0, len) )
+		    
+		  Else
+		    Raise New Error("offline")
+		  End
 		End Sub
 	#tag EndMethod
 
@@ -226,17 +259,16 @@ Inherits TCPSocket
 	#tag EndMethod
 
 
-	#tag Hook, Flags = &h0
-		Event ReplyReceived(values() As Variant)
-	#tag EndHook
-
-
 	#tag Property, Flags = &h21
 		Private buffer As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private pCallbacks As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private pRetryTimer As MessagePack.RetryTimer
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

@@ -1,14 +1,24 @@
 #tag Class
 Protected Class ThTest
-Inherits Thread
+Inherits MessagePack.MPThread
 	#tag Event
 		Sub Run()
-		  If pSync Then
-		    RunSync()
-		  Else
-		    RunAsync()
-		  End
 		  
+		  While true
+		    
+		    Try
+		      App.SleepCurrentThread(200)
+		      
+		      If pSync Then
+		        RunSync()
+		      Else
+		        RunAsync()
+		      End
+		    Catch err As MessagePack.Error
+		      
+		    End
+		    
+		  Wend
 		End Sub
 	#tag EndEvent
 
@@ -25,8 +35,13 @@ Inherits Thread
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Sub Reply(req_id As Integer, ret() As Variant)
-		  pReplies.Value(req_id) = ret(0)
+		Private Sub Reply(req_id As Integer, ret As Variant, error As MessagePack.Error = Nil)
+		  If error <> Nil Then
+		    pReplies.Value(req_id) = ret
+		  Else
+		    pReplies.Value(req_id) = "timeout"
+		  End
+		  
 		End Sub
 	#tag EndMethod
 
@@ -56,9 +71,9 @@ Inherits Thread
 		  Next
 		  
 		  If errors <> 0 Then
-		    MsgBox( "Errors: " + Str(errors))
-		  Else
-		    Quit()
+		    'MsgBox( "Errors: " + Str(errors))
+		    'Else
+		    'Quit()
 		  End IF
 		End Sub
 	#tag EndMethod
@@ -97,10 +112,6 @@ Inherits Thread
 
 	#tag Property, Flags = &h21
 		Private pSync As Boolean
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		return_values() As Variant
 	#tag EndProperty
 
 

@@ -1,13 +1,6 @@
 #tag Class
 Protected Class TestClient
 Inherits MessagePack.RPCClient
-	#tag Event
-		Sub ReplyReceived(values() As Variant)
-		  Dim t As integer = 4
-		End Sub
-	#tag EndEvent
-
-
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Address"
