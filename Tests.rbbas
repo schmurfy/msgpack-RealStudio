@@ -48,62 +48,9 @@ Protected Class Tests
 	#tag EndMethod
 
 	#tag Method, Flags = &h21
-		Private Function check_large_bignum(mb As MemoryBlock, n As Variant, offset As Integer = 0) As Integer
-		  '' It is impossible to represent large bignum in realbasic
-		  '' but since the helper is done I am keeping it !
-		  '
-		  '
-		  'Dim mb_ref As New MemoryBlock(8)
-		  'Dim i As Integer
-		  '
-		  'mb_ref.LittleEndian = false
-		  'mb_ref.Int64Value(0) = n
-		  '
-		  'assert_byte(mb, offset + 0, MessagePack.LARGE_BIGNUM, "Type")
-		  '
-		  '' Build bytes
-		  'Dim tmp As UInt64 = Abs(n)
-		  'Dim bytes() As Byte
-		  'While tmp <> 0
-		  'bytes.Append( tmp Mod 256 )
-		  'tmp = Bitwise.ShiftRight(tmp, 8)
-		  'Wend
-		  '
-		  '' Size
-		  'Dim len As Integer = bytes.Ubound + 1
-		  'Dim size_ref As New MemoryBlock(4)
-		  'size_ref.LittleEndian = False
-		  'size_ref.UInt32Value(0) = len
-		  '
-		  'For i = 0 To 3
-		  'assert_byte(mb, offset + 1 + i, size_ref.Byte(i), "Size")
-		  'Next
-		  '
-		  'If n > 0 Then
-		  'assert_byte(mb, offset + 2, 0, "Positive Sign")
-		  'Else
-		  'assert_byte(mb, offset + 2, 1, "Negative Sign")
-		  'End If
-		  '
-		  'Dim mb_bytes() As Byte
-		  '
-		  'For i = 0 To len - 1
-		  'mb_bytes.Append( mb.Byte(offset + i + 3) )
-		  'Next
-		  '
-		  'For i = 0 To len -1
-		  'assert_byte(mb, offset + i + 3, bytes(i), "Value")
-		  'Next
-		  '
-		  'Return 1 + 4
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
 		Private Function check_negative_integer(mb As MemoryBlock, n As Int64, offset As Integer = 0) As Integer
 		  Dim mb_ref As New MemoryBlock(1)
-		  Dim i, size As Integer
+		  Dim i As Integer
 		  
 		  mb_ref.LittleEndian = false
 		  
@@ -146,7 +93,7 @@ Protected Class Tests
 	#tag Method, Flags = &h21
 		Private Function check_positive_integer(mb As MemoryBlock, n As UInt64, offset As Integer = 0) As Integer
 		  Dim mb_ref As New MemoryBlock(1)
-		  Dim i, size As Integer
+		  Dim i As Integer
 		  
 		  mb_ref.LittleEndian = false
 		  
@@ -849,7 +796,7 @@ Protected Class Tests
 		  Dim offset As Integer = 3
 		  
 		  Dim keys() As Variant = d.Keys
-		  Dim values() As Variant = d.Values
+		  'Dim values() As Variant = d.Values
 		  
 		  For n As Integer = 0 To d.Count - 1
 		    offset = offset + check_positive_integer(mb, keys(n).IntegerValue, offset)
@@ -878,7 +825,7 @@ Protected Class Tests
 		  Dim offset As Integer = 5
 		  
 		  Dim keys() As Variant = d.Keys
-		  Dim values() As Variant = d.Values
+		  'Dim values() As Variant = d.Values
 		  
 		  For n As Integer = 0 To d.Count - 1
 		    offset = offset + check_positive_integer(mb, keys(n).IntegerValue, offset)
@@ -911,7 +858,7 @@ Protected Class Tests
 		  
 		  MessagePack.encode(bs, arr)
 		  bs.Position = 0
-		  Dim ret() As Variant = MessagePack.decode_item(bs)
+		  'Dim ret() As Variant = MessagePack.decode_item(bs)
 		  
 		  ' reference data
 		  bs_ref.WriteUint8(&h94)
