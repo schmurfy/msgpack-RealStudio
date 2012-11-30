@@ -109,9 +109,15 @@ Inherits TCPSocket
 		      Return True
 		      
 		    ElseIf cmd(0) = "call" Then
-		      Dim ret As Variant = run_service_method(cmd(2), cmd(3), cmd(4))
-		      send_reply(cmd(1), ret)
+		      Try
+		        Dim ret As Variant = run_service_method(cmd(2), cmd(3), cmd(4))
+		        send_reply(cmd(1), ret)
+		      Catch err As RuntimeException
+		        send_error(cmd(1), "app_error", err.Message)
+		      End
+		      
 		      Return True
+		      
 		      
 		    End If
 		  End If
@@ -196,6 +202,20 @@ Inherits TCPSocket
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub send_error(req_id As Integer, type As String, msg As String)
+		  Dim cmd(3) As Variant
+		  
+		  cmd(0) = "error"
+		  cmd(1) = req_id
+		  cmd(2) = type
+		  cmd(3) = msg
+		  
+		  send_packet(cmd)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub send_packet(cmd() As Variant)
 		  If IsConnected Then
@@ -229,7 +249,7 @@ Inherits TCPSocket
 		  
 		  cmd(0) = "reply"
 		  cmd(1) = req_id
-		  cmd(4) = val
+		  cmd(2) = val
 		  
 		  send_packet(cmd)
 		  
