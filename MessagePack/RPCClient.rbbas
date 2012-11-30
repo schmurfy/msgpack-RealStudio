@@ -85,7 +85,7 @@ Inherits TCPSocket
 
 	#tag Method, Flags = &h21
 		Private Function process_data() As Boolean
-		  Dim after As Double
+		  'Dim after As Double
 		  Dim bs As New BinaryStream(buffer)
 		  
 		  ' first decode the header
@@ -105,15 +105,12 @@ Inherits TCPSocket
 		    
 		    cmd = MessagePack.decode(data)
 		    If (cmd(0) = "reply") or (cmd(0) = "error")  Then
-		      
-		      Dim request_id As Integer = cmd(1)
-		      response_received(request_id, cmd(0), cmd(2))
-		      
+		      response_received(cmd(1), cmd(0), cmd(2))
 		      Return True
 		      
 		    ElseIf cmd(0) = "call" Then
-		      Dim request_id As Integer = cmd(1)
 		      Dim ret As Variant = run_service_method(cmd(2), cmd(3), cmd(4))
+		      send_reply(cmd(1), ret)
 		      Return True
 		      
 		    End If
@@ -138,7 +135,7 @@ Inherits TCPSocket
 	#tag EndMethod
 
 	#tag DelegateDeclaration, Flags = &h21
-		Private Delegate Sub ReplyReceived(req_id As Integer, ret As Variant, error As MessagePack.Error = Nil)
+		Private Delegate Sub ReplyReceived(req_id As Integer, ret As Variant, error As MessagePack . Error = Nil)
 	#tag EndDelegateDeclaration
 
 	#tag Method, Flags = &h21
@@ -223,6 +220,19 @@ Inherits TCPSocket
 		  Else
 		    Raise New Error("offline")
 		  End
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub send_reply(req_id As Integer, val As Variant)
+		  Dim cmd(2) As Variant
+		  
+		  cmd(0) = "reply"
+		  cmd(1) = req_id
+		  cmd(4) = val
+		  
+		  send_packet(cmd)
+		  
 		End Sub
 	#tag EndMethod
 

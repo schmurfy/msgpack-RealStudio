@@ -56,22 +56,6 @@ Protected Module MessagePack
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function decode_float(ByRef bs As BinaryStream) As Double
-		  'Dim type As Byte = bs.ReadByte()
-		  'If type <> MessagePack.Type.FLOAT Then
-		  'Dim ex As New RuntimeException
-		  'ex.Message = "wrong type"
-		  'Raise ex
-		  'End If
-		  '
-		  'Dim str As String = bs.Read(32)
-		  '
-		  '
-		  'Return Val(str)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function decode_integer(ByRef bs As BinaryStream) As Variant
 		  Dim dataType As Byte = bs.ReadByte()
 		  
@@ -291,55 +275,6 @@ Protected Module MessagePack
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub encode_item(ByRef buff As BinaryStream, b As Boolean)
-		  '
-		  'if true_atom = Nil Then
-		  'true_atom = New MessagePack.Symbol("true")
-		  'false_atom = New MessagePack.Symbol("false")
-		  'End If
-		  '
-		  'encode_item(buff,  bert_atom)
-		  'If b Then
-		  'encode_item(buff, true_atom)
-		  'Else
-		  'encode_item(buff, false_atom)
-		  'End If
-		  '
-		  '
-		  '
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub encode_item(ByRef buff As BinaryStream, d As Date)
-		  '
-		  'if time_atom = Nil Then
-		  'time_atom = New MessagePack.Symbol("time")
-		  'End If
-		  '
-		  'encode_item(buff,  bert_atom)
-		  'encode_item(buff, time_atom)
-		  '
-		  'd.GMTOffset = 0
-		  '' Convert to unix timestamp
-		  'Dim stamp AS Double = d.TotalSeconds - 2082844800
-		  '
-		  'Dim mega As Int64 = stamp / 1000000
-		  'Dim seconds As Int64 = stamp Mod 1000000
-		  'Dim usec As Int64 = 0
-		  '
-		  'encode_item(buff, mega)
-		  'encode_item(buff, seconds)
-		  'encode_item(buff, usec)
-		  '
-		  '
-		  '
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub encode_item(ByRef buff As BinaryStream, ByRef d As Dictionary)
 		  
 		  if d.Count <= 15 Then
@@ -392,6 +327,9 @@ Protected Module MessagePack
 
 	#tag Method, Flags = &h0
 		Sub encode_item(ByRef buff As BinaryStream, n As Int64)
+		  #pragma unused buff
+		  #pragma unused n
+		  
 		  'Dim MIN_INT As Integer = Bitwise.ShiftLeft(1, 27, 32) * -1
 		  'Dim MAX_INT As Integer = Bitwise.ShiftLeft(1, 27, 32) - 1
 		  '
@@ -428,6 +366,9 @@ Protected Module MessagePack
 
 	#tag Method, Flags = &h0
 		Sub encode_item(ByRef buff As BinaryStream, obj As Object)
+		  #pragma unused buff
+		  #pragma unused obj
+		  
 		  'If obj IsA Dictionary Then
 		  'Dim d As Dictionary = Dictionary(obj)
 		  'encode_item(buff, d)
