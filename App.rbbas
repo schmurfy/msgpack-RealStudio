@@ -14,7 +14,7 @@ Inherits Application
 		    
 		  #else
 		    
-		    client = New TestClient
+		    client = New MessagePack.RPCClient()
 		    
 		    client.Address = "127.0.0.1"
 		    client.Port = 3002
@@ -37,7 +37,7 @@ Inherits Application
 
 
 	#tag Property, Flags = &h0
-		client As TestClient
+		client As MessagePack.RPCClient
 	#tag EndProperty
 
 

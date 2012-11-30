@@ -10,7 +10,6 @@ Class=Error;MessagePack/Error.rbbas;&h1517449D;&h316ED07C;false
 Window=MainWin;MainWin.rbfrm;&h4E82E26A;&h0;false
 Class=Tests;Tests.rbbas;&h10492801;&h0;false
 Folder=tests;tests;&h4FF3B3FF;&h0;false
-Class=TestClient;tests/TestClient.rbbas;&h7A4FE1F1;&h4FF3B3FF;false
 Class=ThreadRunner;tests/ThreadRunner.rbbas;&h7DB8BAC0;&h4FF3B3FF;false
 Class=ThTest;tests/ThTest.rbbas;&h5F9482D5;&h4FF3B3FF;false
 Class=TestService;tests/TestService.rbbas;&h4EC73AEF;&h4FF3B3FF;false
