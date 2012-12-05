@@ -24,15 +24,14 @@ Inherits TCPSocket
 		  Dim req_id As Integer
 		  
 		  'If LastErrorCode = LostConnection Then
-		  Dim err As New Error("timeout")
 		  
 		  ' start by timing out every pending request
 		  For Each req_id  In pSleepingThreads.Keys
-		    response_received(req_id, "error", err)
+		    response_received(req_id, "error", "timeout")
 		  Next
 		  
 		  For Each req_id In pCallbacks.Keys
-		    response_received(req_id, "error", err)
+		    response_received(req_id, "error", "timeout")
 		  Next
 		  
 		  pRetryTimer = New RetryTimer(10000, AddressOf Connect, Timer.ModeSingle)
