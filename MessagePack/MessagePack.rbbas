@@ -206,21 +206,25 @@ Protected Module MessagePack
 	#tag Method, Flags = &h0
 		Function decode_string(ByRef bs As BinaryStream) As String
 		  Dim dataType As Byte = bs.ReadByte()
+		  Dim ret As String
 		  
 		  If dataType = UInt8(Type.RAW16) Then
 		    Dim size As UInt16 = bs.ReadUInt16()
-		    Return bs.Read(size)
+		    ret = bs.Read(size)
 		    
 		  Elseif dataType = UInt8(Type.RAW32) Then
 		    Dim size As UInt32 = bs.ReadUInt32()
-		    Return bs.Read(size)
+		    ret = bs.Read(size)
 		    
 		  ElseIf BitAnd(&b11100000, dataType) = &b10100000 Then
 		    Dim size As UInt8 = BitAnd(&b00011111, dataType)
-		    Return bs.Read(size)
+		    ret = bs.Read(size)
 		  Else
 		    invalid_type()
 		  End
+		  
+		  
+		  Return DefineEncoding(ret, Encodings.UTF8)
 		  
 		End Function
 	#tag EndMethod
